@@ -1,61 +1,38 @@
-import {readFile} from "fs/promises";
-import {
-    Address,
-    Cell,
-    Contract,
-    contractAddress,
-    ContractProvider,
-    Sender,
-    StateInit,
-    storeStateInit,
-    toNano
-} from "ton-core";
 import {TonClient, WalletContractV3R2} from "ton";
-import {mnemonic, api_key} from "../env.json";
-import {buildInitDataCell, NftCollectionData} from "./utils";
+import {api_key, mnemonic} from "../env.json";
 import {mnemonicToPrivateKey} from "ton-crypto";
-import {Maybe} from "ton-core/src/utils/maybe";
-import {CurrencyCollection} from "ton-core/src/types/CurrencyCollection";
+import TonWeb from "tonweb";
 import Collection from "./collection";
+import {Address, Cell} from "ton-core";
 
-// https://github.com/ton-blockchain/token-contract/blob/1ad314a98d20b41241d5329e1786fc894ad811de/nft/nft-collection-editable.fc
-const NFT_COLLECTION_CODE_HEX = 'B5EE9C724102140100021F000114FF00F4A413F4BCF2C80B0102016202030202CD04050201200E0F04E7D10638048ADF000E8698180B8D848ADF07D201800E98FE99FF6A2687D20699FEA6A6A184108349E9CA829405D47141BAF8280E8410854658056B84008646582A802E78B127D010A65B509E58FE59F80E78B64C0207D80701B28B9E382F970C892E000F18112E001718112E001F181181981E0024060708090201200A0B00603502D33F5313BBF2E1925313BA01FA00D43028103459F0068E1201A44343C85005CF1613CB3FCCCCCCC9ED54925F05E200A6357003D4308E378040F4966FA5208E2906A4208100FABE93F2C18FDE81019321A05325BBF2F402FA00D43022544B30F00623BA9302A402DE04926C21E2B3E6303250444313C85005CF1613CB3FCCCCCCC9ED54002C323401FA40304144C85005CF1613CB3FCCCCCCC9ED54003C8E15D4D43010344130C85005CF1613CB3FCCCCCCC9ED54E05F04840FF2F00201200C0D003D45AF0047021F005778018C8CB0558CF165004FA0213CB6B12CCCCC971FB008002D007232CFFE0A33C5B25C083232C044FD003D0032C03260001B3E401D3232C084B281F2FFF2742002012010110025BC82DF6A2687D20699FEA6A6A182DE86A182C40043B8B5D31ED44D0FA40D33FD4D4D43010245F04D0D431D430D071C8CB0701CF16CCC980201201213002FB5DAFDA89A1F481A67FA9A9A860D883A1A61FA61FF480610002DB4F47DA89A1F481A67FA9A9A86028BE09E008E003E00B01A500C6E';
-// https://github.com/ton-blockchain/token-contract/blob/1ad314a98d20b41241d5329e1786fc894ad811de/nft/nft-item.fc
-const NFT_ITEM_CODE_HEX = 'B5EE9C7241020D010001D0000114FF00F4A413F4BCF2C80B0102016202030202CE04050009A11F9FE00502012006070201200B0C02D70C8871C02497C0F83434C0C05C6C2497C0F83E903E900C7E800C5C75C87E800C7E800C3C00812CE3850C1B088D148CB1C17CB865407E90350C0408FC00F801B4C7F4CFE08417F30F45148C2EA3A1CC840DD78C9004F80C0D0D0D4D60840BF2C9A884AEB8C097C12103FCBC20080900113E910C1C2EBCB8536001F65135C705F2E191FA4021F001FA40D20031FA00820AFAF0801BA121945315A0A1DE22D70B01C300209206A19136E220C2FFF2E192218E3E821005138D91C85009CF16500BCF16712449145446A0708010C8CB055007CF165005FA0215CB6A12CB1FCB3F226EB39458CF17019132E201C901FB00104794102A375BE20A00727082108B77173505C8CBFF5004CF1610248040708010C8CB055007CF165005FA0215CB6A12CB1FCB3F226EB39458CF17019132E201C901FB000082028E3526F0018210D53276DB103744006D71708010C8CB055007CF165005FA0215CB6A12CB1FCB3F226EB39458CF17019132E201C901FB0093303234E25502F003003B3B513434CFFE900835D27080269FC07E90350C04090408F80C1C165B5B60001D00F232CFD633C58073C5B3327B5520BF75041B';
-
+const {NftItem, NftCollection} = TonWeb.token.nft
 
 async function deploy() {
-    let collectionCodeCell = Cell.fromBoc(Buffer.from(NFT_COLLECTION_CODE_HEX, 'hex'))[0];
-    let itemCodeCell = Cell.fromBoc(Buffer.from(NFT_ITEM_CODE_HEX, "hex"))[0];
-    let owner = Address.parse("kQCWsaU-piIXzA4MlbcRabYfWJXrjcq-9e9gnwB7pfSz8jdG");
-    const defaultConfig: NftCollectionData = {
-        ownerAddress: owner,
-        nextItemIndex: 0,
-        collectionContent: 'AAA collection_content',
-        commonContent: 'AAA common_content',
-        nftItemCode: itemCodeCell,
-        royaltyParams: {
-            royaltyFactor: 0,
-            royaltyBase: 0,
-            royaltyAddress: owner
-        }
-    }
-    let dataCell = buildInitDataCell(defaultConfig);
-
-    let stateInit: StateInit = {
-        code: collectionCodeCell,
-        data: dataCell
-    }
-    let address = contractAddress(0, stateInit);
-    console.log(address.toString());
     let client = new TonClient({
         endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC', apiKey: api_key,
+    })
+    let ownerAddr = new TonWeb.Address("kQCWsaU-piIXzA4MlbcRabYfWJXrjcq-9e9gnwB7pfSz8jdG")
+    const createCollectionParams = {
+        ownerAddress: ownerAddr,
+        royalty: 0,
+        royaltyAddress: ownerAddr,
+        collectionContentUri: "https://testnet.toncenter.com/",
+        nftItemContentBaseUri: "https://testnet.toncenter.com/",
+        nftItemCodeHex: NftItem.codeHex,
+    }
+    const tonWebProvider = new TonWeb.HttpProvider('https://testnet.toncenter.com/api/v2/jsonRPC', {apiKey: api_key});
+    let tonWebCollection = new NftCollection(tonWebProvider, createCollectionParams);
+    const nftCollectionAddress = await tonWebCollection.getAddress()
+    console.log(nftCollectionAddress.toString(true,true));
+    const stateInit = await tonWebCollection.createStateInit();
+    const collection = new Collection(Address.parse(nftCollectionAddress.toString()), {
+        code: Cell.fromBoc(Buffer.from(await stateInit.code.toBoc()))[0],
+        data: Cell.fromBoc(Buffer.from(await stateInit.data.toBoc()))[0]
     })
     let key = await mnemonicToPrivateKey(mnemonic.split(" "));
     let wallet = await WalletContractV3R2.create({workchain: 0, publicKey: key.publicKey})
     let walletContract = await client.open(wallet);
     const walletSender = walletContract.sender(key.secretKey);
-    let collection = new Collection(address, {code: collectionCodeCell, data: dataCell});
     let collectionContract = await client.open(collection);
     await collectionContract.sendDeploy(walletSender);
 }

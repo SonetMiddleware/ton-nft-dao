@@ -6,6 +6,7 @@
     "ton-contract-executor": "^0.7.0",
     "ton-core": "^0.48.0",
     "ton-crypto": "^3.2.0",
+    "tonweb": "^0.0.60",
     "ts-node": "^10.9.1"
   }
 }
