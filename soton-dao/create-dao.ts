@@ -11,7 +11,7 @@ async function createDao() {
     let key = await mnemonicToPrivateKey(mnemonic.split(" "));
     let wallet = await WalletContractV3R2.create({workchain: 0, publicKey: key.publicKey})
     let walletContract = await client.open(wallet);
-    const daoCode = fs.readFileSync("../soton-dao/dao-data.cell");
+    const daoCode = fs.readFileSync("./dao-data.cell");
     let codeCell = Cell.fromBoc(daoCode)[0];
     let dataCell = beginCell()
         .storeAddress(Address.parse('kQCWsaU-piIXzA4MlbcRabYfWJXrjcq-9e9gnwB7pfSz8jdG'))
@@ -20,6 +20,8 @@ async function createDao() {
         .storeRef(beginCell().storeBuffer(Buffer.from("test-tg")))
         .storeRef(beginCell().storeBuffer(Buffer.from("test-twitter")))
         .endCell()
+    let stateInitCell=beginCell().storeRef(codeCell).storeRef(dataCell).endCell();
+    console.log(stateInitCell.toBoc().toString('base64'));
     let address = contractAddress(0, {code: codeCell, data: dataCell})
     console.log(address);
     await walletContract.sendTransfer({
