@@ -1,0 +1,30 @@
+(slice, cell, cell, cell, cell) load_data() inline {
+    var ds = get_data().begin_parse();
+    return (ds~load_msg_addr(),
+            ds~load_ref(),
+            ds~load_ref(),
+            ds~load_ref(),
+            ds~load_ref());
+}
+
+() save_data(slice creator, cell collectionId, cell collectionName, cell tgAccount, cell twitter) impure inline {
+    set_data(begin_cell()
+            .store_slice(creator)
+            .store_ref(collectionId)
+            .store_ref(collectionName)
+            .store_ref(tgAccount)
+            .store_ref(twitter)
+            .end_cell());
+}
+
+() recv_internal(int msg_value, cell in_msg, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+    return ();
+}
+
+(slice, cell, cell, cell, cell) getDaoInfo() method_id {
+    var(creator, collectionId, collectionName, tgAccount, twitter) = load_data();
+    return (creator, collectionId, collectionName, tgAccount, twitter);
+}

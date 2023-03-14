@@ -16,7 +16,7 @@ async function deploy() {
         payload: "te6cckEBAwEARAABMQAAAAEAAAAAAAAAAAAAAAAAAAAAQC+vCAgBAUOAEtY0p9TEQvmBwZK24i02w+sSvXG5V9697BPgD3S+ln5QAgACMOYxvl8="
     }
     let body = Cell.fromBase64(resp.payload);
-    let collectionAddress = Address.parse("UQDdvpuLE5sCxmVvj72HVVZTuEin7IIi6YuQ1URhTb0RzOU2");
+    let collectionAddress = Address.parse("UQCMen_bU4SwdTtwZ5d2KU8uZkEGOH_h1zDBvVJDx5XAkT0a");
     await walletContract.sendTransfer({
         seqno: await walletContract.getSeqno(),
         secretKey: key.secretKey,
