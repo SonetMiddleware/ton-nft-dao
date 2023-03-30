@@ -13,10 +13,11 @@ async function deploy() {
     let walletContract = await client.open(wallet);
     let resp = {
         value: "0.08",
-        payload: "te6cckEBAwEARAABMQAAAAEAAAAAAAAAAAAAAAAAAAAAQC+vCAgBAUOAEtY0p9TEQvmBwZK24i02w+sSvXG5V9697BPgD3S+ln5QAgACMOYxvl8="
+        to:"UQCzvxrTZl5hwHKHHFMCll3khfEa0YyVKsDD5mNDDoCzo3dm",
+        payload: "te6cckEBAwEARAABMQAAAAEAAAAAAAAAAAAAAAAAAAABQC+vCAgBAUOAEtY0p9TEQvmBwZK24i02w+sSvXG5V9697BPgD3S+ln5QAgACMbm13eI="
     }
     let body = Cell.fromBase64(resp.payload);
-    let collectionAddress = Address.parse("UQBbsndbKyh2P7fHDdwya5SLmZEHoQRR9NrmwxynC5nx8HJH");
+    let collectionAddress = Address.parse(resp.to);
     await walletContract.sendTransfer({
         seqno: await walletContract.getSeqno(),
         secretKey: key.secretKey,
